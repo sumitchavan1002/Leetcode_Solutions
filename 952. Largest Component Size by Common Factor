@@ -1,0 +1,77 @@
+Problem :
+
+You are given an integer array of unique positive integers nums. Consider the following graph:
+
+There are nums.length nodes, labeled nums[0] to nums[nums.length - 1],
+There is an undirected edge between nums[i] and nums[j] if nums[i] and nums[j] share a common factor greater than 1.
+Return the size of the largest connected component in the graph.
+
+
+
+Solution in Java :
+
+
+class Solution {
+    class UnionFind{
+        int[] parent;
+        int[] size;
+        int max_size_component;
+        UnionFind(int n) {
+            parent = new int[n];
+            size = new int[n];
+            for(int i = 0; i < n; i++) {
+                parent[i] = i;
+                size[i] = 1;
+            }
+            max_size_component = 1;
+        }
+        private int find(int x) {
+            while(x != parent[x]) {
+                parent[x] = find(parent[x]);
+                x = parent[x];
+            }
+            return x;
+        }
+        private void union(int x, int y) {
+            x = find(x);
+            y = find(y);
+            if(x == y) {
+                return;
+            }
+            if(size[x] <= size[y]) {
+                parent[x] = y;
+                size[y] += size[x];
+                max_size_component = Math.max(max_size_component, size[y]);
+            }else {
+                parent[y] = x;
+                size[x] += size[y];
+                max_size_component = Math.max(max_size_component, size[x]);
+            }
+        }
+    }
+    public int largestComponentSize(int[] A) {
+        // map of factor , one of the array index having that factor.
+        int n = A.length;
+        UnionFind uf = new UnionFind(n);
+        Map<Integer, Integer> map = new HashMap<>();
+        for(int i = 0; i < n; i++) {
+            int value = A[i];
+            for(int j = 2; j*j <= value; j++) {
+                if(value % j == 0) {
+                    // value = j * (val/j) so check out for both
+                    putOrUnion(j, i, map, uf); // factor, index
+                    putOrUnion(value / j, i, map, uf); 
+                }
+            }
+            putOrUnion(value, i, map, uf);
+        }
+        return uf.max_size_component;
+    }
+    private void putOrUnion(int factor, int index, Map<Integer, Integer> map, UnionFind uf) {
+        if(!map.containsKey(factor)) {
+            map.put(factor, index);
+        }else {
+            uf.union(index, map.get(factor));
+        }
+    }
+}
